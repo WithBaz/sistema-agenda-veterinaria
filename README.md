@@ -22,12 +22,14 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 * **Restricción por Estado Vital:** Las mascotas marcadas como fallecidas quedan inhabilitadas para nuevas citas, preservando permanentemente su historial clínico para consultas.
 * **Consulta Inteligente de Disponibilidad:** Genera la agenda del día por profesional, mostrando tanto los turnos asignados como los intervalos libres disponibles en la jornada laboral (08:00 a 18:00).
 
-## 🧱 Modelo de Dominio (Entidades)
+## 🧱 Modelo de Dominio (7 Entidades)
 1. **Propietario:** Responsable del paciente animal (documento, nombres, teléfono de contacto).
 2. **Mascota:** Paciente veterinario asociado a un propietario (nombre, especie, raza, estado vital: activo/fallecido).
-3. **Profesional:** Médico veterinario encargado de la atención clínica.
-4. **Cita:** Registro estructurado de la reserva (profesional, mascota, tipo de consulta, rango horario y estado).
-5. **Atención Registrada:** Registro médico generado tras la consulta (motivo, diagnóstico clínico y tratamiento formulado).
+3. **Profesional:** Médico veterinario encargado de la atención clínica (capacidad para 3 profesionales concurrentes).
+4. **TipoConsulta (Entidad Adicional):** Catálogo desacoplado de servicios veterinarios y sus duraciones estimadas estándar.
+5. **Cita:** Registro estructurado de la reserva (profesional, mascota, tipo de consulta, rango horario y estado).
+6. **Atención Registrada:** Registro médico generado tras la consulta (motivo, diagnóstico clínico y notas evolutivas).
+7. **PrescripcionMedica (Entidad Adicional):** Detalle farmacológico estructurado (medicamento, dosis, duración de tratamiento) asociado a la atención médica.
 
 ## 🛠️ Stack Tecnológico
 * **Lenguaje:** Python 3.12+
@@ -35,5 +37,8 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 * **Persistencia:** SQLite con SQLAlchemy (Motor relacional portable, ligero y consistente)
 * **Validación y Esquemas:** Pydantic V2
 
-## 🚀 Instalación y Ejecución
-*(Instrucciones detalladas de despliegue local que se incorporarán en las siguientes fases del desarrollo).*
+## 📁 Documentación de Arquitectura y Proceso
+* [AGENTS.md](AGENTS.md): Contexto operativo, restricciones y evolución de directrices para el agente de IA.
+* [ASSUMPTIONS.md](ASSUMPTIONS.md): Registro explícito de asunciones técnicas y de negocio.
+* [BITACORA-IA.md](BITACORA-IA.md): Registro de interacciones, decisiones y control del proceso con IA.
+* [ADR-001](docs/adr/ADR-001-seleccion-herramienta-ia.md): Decisión arquitectónica sobre la elección del entorno agéntico de IA.
