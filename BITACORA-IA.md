@@ -1,4 +1,4 @@
-﻿# BITACORA-IA.md — Registro de Interacción y Uso de Inteligencia Artificial
+# BITACORA-IA.md — Registro de Interacción y Uso de Inteligencia Artificial
 
 Documento de auditoría del proceso de colaboración con herramientas de IA, registrando las peticiones realizadas, propuestas del agente, decisiones del desarrollador y elementos pendientes de verificación técnica.
 
@@ -33,3 +33,32 @@ Documento de auditoría del proceso de colaboración con herramientas de IA, reg
 * Implementación del código ejecutable en FastAPI (modelos SQLAlchemy y endpoints).
 * Pruebas automáticas del algoritmo de cálculo de espacios libres en la agenda diaria.
 * Pruebas de concurrencia para evitar citas simultáneas de un mismo profesional.
+
+---
+
+## Sesión 2: 2026-09-18 — Modelado de Persistencia Relacional y Pruebas Unitarias
+* **Herramienta utilizada:** Antigravity (Google DeepMind).
+* **Objetivo de la sesión:** Diseñar e implementar los modelos de base de datos para las 7 entidades con SQLAlchemy 2.0 y SQLite, verificando integridad referencial y relaciones mediante pruebas automatizadas.
+
+### 1. ¿Qué se le pidió al agente?
+1. Iniciar con el apartado de los modelos de base de datos del sistema.
+2. Presentar un plan de implementación detallado para aprobación previa.
+3. Construir la estructura modular de la capa de datos.
+
+### 2. ¿Qué propuso el agente?
+* **Diseño modular:** Separar cada modelo en su propio módulo bajo `app/models/`, exportados centralizadamente desde `app/models/__init__.py`.
+* **SQLAlchemy 2.0:** Emplear `Mapped` y `mapped_column` para tipado estricto de campos.
+* **Integridad en SQLite:** Configurar un listener a nivel de eventos de conexión (`PRAGMA foreign_keys=ON`), dado que SQLite desactiva las claves foráneas por defecto.
+* **Gobernanza:** Redactar `ADR-002: Persistencia Relacional con SQLite y SQLAlchemy 2.0` y suite de pruebas unitarias automatizadas con `pytest`.
+
+### 3. ¿Qué se aceptó y qué se rechazó?
+* ✅ **Aceptado:**
+  * Plan de implementación completo (`implementation_plan.md`).
+  * Estructura modular de 7 entidades y activación de claves foráneas por pragma.
+  * Suite de 5 pruebas automatizadas (creación de esquema, inserción completa, claves foráneas, unicidad y cascadas).
+* ❌ **Rechazado / Modificado:**
+  * Se corrigieron advertencias de deprecación de fechas de Python 3.12 (`datetime.utcnow()` reemplazado por objetos timezone-aware con `timezone.utc`).
+
+### 4. ¿Qué quedó sin verificar para las siguientes sesiones?
+* Capa de servicios de dominio (algoritmo de cálculo de espacios libres y validación de solapamiento de citas).
+* Endpoints REST en FastAPI y serializadores Pydantic.

@@ -1,4 +1,4 @@
-﻿# Sistema de Gestión y Agenda Veterinaria
+# Sistema de Gestión y Agenda Veterinaria
 
 Plataforma backend para la gestión automatizada de turnos médicos en clínicas veterinarias, diseñada para erradicar el solapamiento de consultas y la pérdida de historiales clínicos. Permite coordinar las agendas de múltiples profesionales en tiempo real, calculando la duración dinámica de cada cita y visibilizando los espacios libres de atención.
 
@@ -34,11 +34,25 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 ## 🛠️ Stack Tecnológico
 * **Lenguaje:** Python 3.12+
 * **Framework Web:** FastAPI (Arquitectura REST con documentación interactiva OpenAPI / Swagger)
-* **Persistencia:** SQLite con SQLAlchemy (Motor relacional portable, ligero y consistente)
+* **Persistencia:** SQLite con SQLAlchemy 2.0 (Motor relacional portable, tipado y consistente)
 * **Validación y Esquemas:** Pydantic V2
+* **Pruebas Automatizadas:** Pytest
+
+## 🚀 Instalación y Pruebas
+1. Clonar el repositorio y crear entorno virtual:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+2. Ejecutar la suite de pruebas de persistencia:
+   ```bash
+   pytest -v
+   ```
 
 ## 📁 Documentación de Arquitectura y Proceso
 * [AGENTS.md](AGENTS.md): Contexto operativo, restricciones y evolución de directrices para el agente de IA.
 * [ASSUMPTIONS.md](ASSUMPTIONS.md): Registro explícito de asunciones técnicas y de negocio.
 * [BITACORA-IA.md](BITACORA-IA.md): Registro de interacciones, decisiones y control del proceso con IA.
-* [ADR-001](docs/adr/ADR-001-seleccion-herramienta-ia.md): Decisión arquitectónica sobre la elección del entorno agéntico de IA.
+* [ADR-001](docs/adr/ADR-001-seleccion-herramienta-ia.md): Selección del entorno agéntico de IA (Antigravity).
+* [ADR-002](docs/adr/ADR-002-persistencia-sqlalchemy-sqlite.md): Persistencia relacional con SQLite y SQLAlchemy 2.0.
