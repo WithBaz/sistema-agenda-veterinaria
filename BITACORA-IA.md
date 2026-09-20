@@ -93,3 +93,36 @@ Documento de auditoría del proceso de colaboración con herramientas de IA, reg
 ### 4. ¿Qué quedó sin verificar para las siguientes sesiones?
 * Capa de presentación / API REST con FastAPI (rutas HTTP, inyección de dependencias y documentación Swagger UI).
 * Script de inicialización de datos de prueba (*seed data*) con los 3 profesionales de la clínica.
+
+---
+
+## Sesión 4: 2026-09-20 — API REST con FastAPI, Seed Data, Pruebas E2E y Guía de Defensa
+* **Herramienta utilizada:** Antigravity (Google DeepMind).
+* **Objetivo de la sesión:** Concluir el 100% del sistema: exponer controladores HTTP modulares, sembrar datos de prueba con los 3 veterinarios, ejecutar pruebas de integración E2E y documentar la guía estratégica para la defensa oral de 6 minutos.
+
+### 1. ¿Qué se le pidió al agente?
+1. Terminar todo el sistema antes de la fecha límite dominical (23:59).
+2. Implementar los endpoints de FastAPI y la documentación interactiva en Swagger.
+3. Asegurar datos precargados para que el evaluador pueda probar el sistema de inmediato.
+4. Elaborar una guía detallada para sostener con éxito la defensa oral frente a preguntas del jurado.
+
+### 2. ¿Qué propuso el agente?
+* **Arquitectura de Controladores (`app/routers/`):** Desacoplar rutas en `agenda.py`, `citas.py`, `atenciones.py` y `catalogos.py`.
+* **Mapeo de Errores Limpio:** Manejadores globales en `app/main.py` traduciendo excepciones de dominio (`CruceHorarioError` $\to$ 409, `MascotaFallecidaError` $\to$ 400, etc.).
+* **Siembra de Datos (`app/seed.py`):** Carga automática de los 3 profesionales, 3 tipos de consulta, casos de prueba con citas y mascota fallecida con historial previo.
+* **Pruebas de Integración (`tests/test_api_endpoints.py`):** 8 pruebas E2E con `TestClient` simulando llamadas HTTP reales.
+* **Guía de Defensa (`docs/GUIA-DEFENSA-ORAL.md`):** Libreto minuto a minuto (Min 1 a 6) y respuestas preparadas para las preguntas del jurado.
+
+### 3. ¿Qué se aceptó y qué se rechazó?
+* ✅ **Aceptado:**
+  * Plan de implementación definitivo aprobado.
+  * Los 4 routers HTTP modulares y la redirección automática de `/` a `/docs`.
+  * La incorporación de `StaticPool` en la configuración de pruebas para solucionar el aislamiento de SQLite `:memory:` entre hilos en `TestClient`.
+  * La estructura de la defensa oral orientada al criterio y decisiones de arquitectura.
+* ❌ **Modificado durante el proceso:**
+  * Se instaló la dependencia `httpx` requerida por `fastapi.testclient.TestClient` y se actualizó `requirements.txt`.
+
+### 4. Estado Final de Verificación:
+* **21 pruebas automatizadas aprobadas (100% de éxito en 1.05 segundos).**
+* Base de datos poblada y lista para ejecutar con un solo comando.
+* Entregable completo y listo para defensa oral.

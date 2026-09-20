@@ -19,7 +19,7 @@ El agente de IA debe implementar y verificar en la lógica de negocio las siguie
 El sistema opera sobre 7 entidades relacionadas:
 1. `Propietario`: Dueño o responsable del animal.
 2. `Mascota`: Paciente sujeto de atención.
-3. `Profesional`: Veterinario asignado al turno.
+3. `Profesional`: Veterinario asignado al turno (3 profesionales).
 4. `TipoConsulta`: Catálogo de tipos de consulta y tiempos estándar de atención.
 5. `Cita`: Evento de agendamiento temporal.
 6. `AtencionRegistrada`: Cierre clínico y diagnóstico de una cita efectuada.
@@ -28,10 +28,10 @@ El sistema opera sobre 7 entidades relacionadas:
 ## 4. Principios de Arquitectura y Buenas Prácticas
 * **Separación de Responsabilidades en Capas:**
   * **Capa de Dominio / Servicios:** Donde residen las reglas de negocio, validaciones y algoritmos de disponibilidad horaria.
-  * **Capa de Persistencia / Repositorios:** Abstracción para el almacenamiento y consultas en base de datos.
-  * **Capa de Entrada / API:** Endpoints REST, esquemas Pydantic y manejo de respuestas HTTP.
+  * **Capa de Persistencia / Repositorios:** Abstracción para el almacenamiento y consultas en base de datos con SQLAlchemy 2.0 y SQLite.
+  * **Capa de Entrada / API:** Controladores REST con FastAPI, validación Pydantic V2 y documentación Swagger OpenAPI.
 * **Transparencia y Explicabilidad:** Toda decisión técnica y fragmento de código debe ser claro, mantenible y fundamentado. Evitar código innecesariamente complejo.
-* **Persistencia Robusta:** Esquema relacional con claves foráneas e integridad referencial garantizada.
+* **Persistencia Robusta:** Esquema relacional con claves foráneas activadas mediante eventos de conexión (`PRAGMA foreign_keys=ON;`).
 
 ## 5. Registro de Evolución del Contexto (Changelog)
 * **2026-09-18 (Versión Inicial):**
@@ -44,3 +44,8 @@ El sistema opera sobre 7 entidades relacionadas:
   - Formalización de la capa de servicios (`app/services/`): detección de colisiones mediante intersección de intervalos semiabiertos.
   - Especificación del algoritmo de barrido lineal para el cálculo exacto de huecos libres dentro de los 600 minutos diarios.
   - Incorporación de `ADR-003` y suite de pruebas unitarias con Pytest.
+* **2026-09-20 (Iteración 4 - Culminación del Sistema, API REST y Cierre):**
+  - Exposición de endpoints REST modulares bajo `/api/v1` en FastAPI con documentación Swagger interactiva.
+  - Siembra de datos automática (`seed.py`) con los 3 profesionales, tipos de consulta y casos de prueba.
+  - Suite de integración E2E completando 21 pruebas automatizadas con 100% de éxito.
+  - Formalización de la `GUIA-DEFENSA-ORAL.md` para la sustentación individual de 6 minutos.

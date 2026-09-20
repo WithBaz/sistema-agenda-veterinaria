@@ -20,7 +20,7 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
   * Procedimiento / Especialidad: 60 minutos.
 * **Política de Cancelaciones:** Permite cancelaciones con hasta 2 horas de anticipación a la cita programada; posterior a esa ventana, la cita se registra de forma obligatoria como inasistencia.
 * **Restricción por Estado Vital:** Las mascotas marcadas como fallecidas quedan inhabilitadas para nuevas citas, preservando permanentemente su historial clínico para consultas.
-* **Consulta Inteligente de Disponibilidad:** Genera la agenda del día por profesional, mostrando tanto los turnos asignados como los intervalos libres disponibles en la jornada laboral (08:00 a 18:00).
+* **Consulta Inteligente de Disponibilidad (Consulta Obligatoria):** Genera la agenda del día por profesional, mostrando tanto los turnos asignados como los intervalos libres disponibles en la jornada laboral (08:00 a 18:00).
 
 ## 🧱 Modelo de Dominio (7 Entidades)
 1. **Propietario:** Responsable del paciente animal (documento, nombres, teléfono de contacto).
@@ -34,26 +34,48 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 ## 🛠️ Stack Tecnológico
 * **Lenguaje:** Python 3.12+
 * **Framework Web:** FastAPI (Arquitectura REST con documentación interactiva OpenAPI / Swagger)
-* **Persistencia:** SQLite con SQLAlchemy 2.0 (Motor relacional portable, tipado y consistente)
+* **Persistencia:** SQLite con SQLAlchemy 2.0 (Motor relacional portable, fuertemente tipado y consistente)
 * **Validación y Esquemas:** Pydantic V2
-* **Pruebas Automatizadas:** Pytest
+* **Pruebas Automatizadas:** Pytest con TestClient
 
-## 🚀 Instalación y Pruebas
-1. Clonar el repositorio y activar entorno virtual:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-2. Ejecutar la suite completa de pruebas automatizadas (13 pruebas de persistencia y reglas de negocio):
-   ```bash
-   pytest -v
-   ```
+## 🚀 Instalación y Puesta en Marcha (Desde Cero)
 
-## 📁 Documentación de Arquitectura y Proceso
+### 1. Clonar y Configurar Entorno
+```bash
+git clone https://github.com/WithBaz/sistema-agenda-veterinaria.git
+cd sistema-agenda-veterinaria
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Poblar Datos de Prueba (Seed Data)
+Precarga automáticamente los 3 profesionales requeridos, tipos de consulta y casos de prueba:
+```bash
+python -m app.seed
+```
+
+### 3. Ejecutar el Servidor
+```bash
+uvicorn app.main:app --reload
+```
+Abre en tu navegador la documentación interactiva:
+👉 **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)  
+👉 **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+### 4. Ejecutar la Suite de Pruebas Automatizadas
+Ejecuta las **21 pruebas unitarias y de integración E2E**:
+```bash
+pytest -v
+```
+
+---
+
+## 📁 Documentación de Arquitectura y Gobernanza
 * [AGENTS.md](AGENTS.md): Contexto operativo, restricciones y evolución de directrices para el agente de IA.
 * [ASSUMPTIONS.md](ASSUMPTIONS.md): Registro explícito de asunciones técnicas y de negocio.
-* [BITACORA-IA.md](BITACORA-IA.md): Registro de interacciones, decisiones y control del proceso con IA.
-* [ADR-001](docs/adr/ADR-001-seleccion-herramienta-ia.md): Selección del entorno agéntico de IA (Antigravity).
-* [ADR-002](docs/adr/ADR-002-persistencia-sqlalchemy-sqlite.md): Persistencia relacional con SQLite y SQLAlchemy 2.0.
-* [ADR-003](docs/adr/ADR-003-algoritmo-disponibilidad-agenda.md): Algoritmo de cálculo de disponibilidad y detección de solapamiento temporal.
+* [BITACORA-IA.md](BITACORA-IA.md): Auditoría completa del proceso y sesiones de trabajo con IA.
+* [ADR-001: Elección de Herramienta de IA](docs/adr/ADR-001-seleccion-herramienta-ia.md): Decisión sobre Antigravity (Google DeepMind).
+* [ADR-002: Persistencia Relacional](docs/adr/ADR-002-persistencia-sqlalchemy-sqlite.md): Decisión sobre SQLite y SQLAlchemy 2.0.
+* [ADR-003: Algoritmo de Disponibilidad](docs/adr/ADR-003-algoritmo-disponibilidad-agenda.md): Decisión sobre algoritmo de barrido lineal continuo vs ranuras fijas.
+* [GUIA-DEFENSA-ORAL.md](docs/GUIA-DEFENSA-ORAL.md): Libreto minuto a minuto para la exposición de 6 minutos y respuestas a preguntas clave.
