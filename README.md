@@ -39,13 +39,13 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 * **Pruebas Automatizadas:** Pytest
 
 ## 🚀 Instalación y Pruebas
-1. Clonar el repositorio y crear entorno virtual:
+1. Clonar el repositorio y activar entorno virtual:
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # En Windows: .venv\Scripts\activate
    pip install -r requirements.txt
    ```
-2. Ejecutar la suite de pruebas de persistencia:
+2. Ejecutar la suite completa de pruebas automatizadas (13 pruebas de persistencia y reglas de negocio):
    ```bash
    pytest -v
    ```
@@ -56,3 +56,4 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 * [BITACORA-IA.md](BITACORA-IA.md): Registro de interacciones, decisiones y control del proceso con IA.
 * [ADR-001](docs/adr/ADR-001-seleccion-herramienta-ia.md): Selección del entorno agéntico de IA (Antigravity).
 * [ADR-002](docs/adr/ADR-002-persistencia-sqlalchemy-sqlite.md): Persistencia relacional con SQLite y SQLAlchemy 2.0.
+* [ADR-003](docs/adr/ADR-003-algoritmo-disponibilidad-agenda.md): Algoritmo de cálculo de disponibilidad y detección de solapamiento temporal.

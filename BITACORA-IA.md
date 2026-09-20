@@ -62,3 +62,34 @@ Documento de auditoría del proceso de colaboración con herramientas de IA, reg
 ### 4. ¿Qué quedó sin verificar para las siguientes sesiones?
 * Capa de servicios de dominio (algoritmo de cálculo de espacios libres y validación de solapamiento de citas).
 * Endpoints REST en FastAPI y serializadores Pydantic.
+
+---
+
+## Sesión 3: 2026-09-19 — Capa de Servicios, Reglas Innegociables y Algoritmo de Disponibilidad
+* **Herramienta utilizada:** Antigravity (Google DeepMind).
+* **Objetivo de la sesión:** Implementar la capa de servicios de dominio, codificar las 4 reglas de negocio innegociables, desarrollar el algoritmo de cálculo de espacios libres y formalizar `ADR-003`.
+
+### 1. ¿Qué se le pidió al agente?
+1. Continuar con el siguiente bloque del sistema para adelantar trabajo antes del cierre del fin de semana.
+2. Presentar un plan de implementación para revisión antes de tocar el código.
+3. Desarrollar la lógica de negocio y las pruebas automatizadas asociadas.
+
+### 2. ¿Qué propuso el agente?
+* **Separación de Servicios:** `app/services/agenda_service.py` (citas, solapamientos, cancelación y disponibilidad diaria) y `app/services/atencion_service.py` (cierre clínico y consulta de historial).
+* **Esquemas Pydantic V2:** DTOs en `app/schemas/` para tipar solicitudes y respuestas.
+* **Algoritmo de Detección de Cruces:** Intersección matemática de intervalos semiabiertos `[inicio, fin)` filtrados en BD.
+* **Algoritmo de Barrido Temporal:** Algoritmo lineal (*sweep-line*) con puntero cursor para detectar huecos de tiempo entre citas de 08:00 a 18:00.
+* **Gobernanza:** Redacción de `ADR-003` para sustentar el algoritmo de disponibilidad temporal frente a matrices de ranuras discretas.
+
+### 3. ¿Qué se aceptó y qué se rechazó?
+* ✅ **Aceptado:**
+  * Plan de implementación aprobado mediante `implementation_plan.md`.
+  * La fórmula de detección de colisión de intervalos y el cálculo continuo de huecos libres.
+  * La regla estricta de cancelación: $\ge 2$ horas pasa a `cancelada`, $< 2$ horas pasa obligatoriamente a `inasistencia`.
+  * Suite de 8 nuevas pruebas unitarias en `tests/test_agenda_service.py` (totalizando 13 pruebas aprobadas en menos de 1 segundo).
+* ❌ **Rechazado / Descartado:**
+  * Se descartó utilizar una matriz de slots fijos de 15 minutos en base de datos por ser rígida e incompatible con tipos de consulta heterogéneos (20, 30 y 60 min).
+
+### 4. ¿Qué quedó sin verificar para las siguientes sesiones?
+* Capa de presentación / API REST con FastAPI (rutas HTTP, inyección de dependencias y documentación Swagger UI).
+* Script de inicialización de datos de prueba (*seed data*) con los 3 profesionales de la clínica.

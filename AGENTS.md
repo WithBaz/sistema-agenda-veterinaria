@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Contexto Operativo para el Agente de IA
+# AGENTS.md — Contexto Operativo para el Agente de IA
 
 Este documento define el contexto, las restricciones de dominio, los principios arquitectónicos y las pautas operativas que el agente de IA debe acatar rigurosamente en el desarrollo del **Sistema de Gestión y Agenda Veterinaria**.
 
@@ -40,3 +40,7 @@ El sistema opera sobre 7 entidades relacionadas:
 * **2026-09-18 (Iteración 2 - Enriquecimiento del Modelo y Gobernanza):**
   - Incorporación de las entidades `TipoConsulta` (desacople de duraciones) y `PrescripcionMedica` (trazabilidad del historial clínico).
   - Integración de `ASSUMPTIONS.md`, `BITACORA-IA.md` y `ADR-001` (Selección de herramienta agéntica de IA).
+* **2026-09-19 (Iteración 3 - Lógica de Dominio y Algoritmos de Disponibilidad):**
+  - Formalización de la capa de servicios (`app/services/`): detección de colisiones mediante intersección de intervalos semiabiertos.
+  - Especificación del algoritmo de barrido lineal para el cálculo exacto de huecos libres dentro de los 600 minutos diarios.
+  - Incorporación de `ADR-003` y suite de pruebas unitarias con Pytest.
