@@ -1,12 +1,14 @@
 """Aplicación Principal FastAPI — Sistema de Gestión y Agenda Veterinaria.
 
-Provee una API REST modular, fuertemente tipada y con documentación interactiva Swagger/OpenAPI.
+Provee una API REST modular, interfaz web interactiva y documentación interactiva Swagger/OpenAPI.
 """
 
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import engine, Base
 from app.routers import agenda_router, citas_router, atenciones_router, catalogos_router
@@ -28,7 +30,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Sistema de Gestión y Agenda Veterinaria",
     description=(
-        "API REST para la gestión integral de turnos médicos en una clínica veterinaria con 3 profesionales. "
+        "API REST y Dashboard para la gestión integral de turnos médicos en una clínica veterinaria con 3 profesionales. "
         "Garantiza el cumplimiento innegociable de reglas de negocio: no solapamiento temporal, bloques dinámicos "
         "según el tipo de consulta, política estricta de cancelación (2 horas / inasistencia), restricción "
         "de agendamiento para mascotas fallecidas y cálculo automático de espacios libres en la jornada laboral."
@@ -47,6 +49,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Montaje de archivos estáticos (Frontend)
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # ============================================================================
 # MANEJADORES CENTRALIZADOS DE EXCEPCIONES DE NEGOCIO
@@ -97,8 +104,11 @@ app.include_router(catalogos_router, prefix="/api/v1")
 
 @app.get("/", include_in_schema=False)
 def root():
-    """Redirige automáticamente la raíz hacia la documentación interactiva Swagger UI."""
-    return RedirectResponse(url="/docs")
+    """Sirve la interfaz web interactiva en la raíz del sistema."""
+    index_file = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"message": "VetSchedule API activa. Visita /docs para Swagger UI."}
 
 @app.get("/health", tags=["Estado del Sistema"])
 def health_check():
