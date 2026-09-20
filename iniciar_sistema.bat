@@ -5,7 +5,15 @@ echo      Iniciando Sistema de Agenda Veterinaria
 echo ========================================================
 echo.
 cd /d "%~dp0"
-echo [1/2] Verificando base de datos y siembra de datos...
+
+if not exist ".venv\Scripts\python.exe" (
+    echo [0/2] Creando entorno virtual e instalando dependencias necesarias...
+    python -m venv .venv
+    .\.venv\Scripts\pip.exe install -r requirements.txt
+    echo.
+)
+
+echo [1/2] Verificando base de datos y siembra de datos iniciales...
 .\.venv\Scripts\python.exe -m app.seed
 echo.
 echo [2/2] Levantando servidor web en http://127.0.0.1:8000 ...

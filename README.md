@@ -33,14 +33,27 @@ Este sistema centraliza el agendamiento mediante validaciones de concurrencia y 
 
 ## 🛠️ Stack Tecnológico
 * **Lenguaje:** Python 3.12+
-* **Framework Web:** FastAPI (Arquitectura REST con interfaz visual y documentación Swagger OpenAPI)
-* **Persistencia:** SQLite con SQLAlchemy 2.0 (Motor relacional portable, tipado y consistente)
+* **Framework Web:** FastAPI (Arquitectura REST con interfaz visual SPA y documentación Swagger OpenAPI)
+* **Persistencia:** SQLite con SQLAlchemy 2.0 (Motor relacional portable, tipado estricto y claves foráneas activas `PRAGMA foreign_keys=ON;`)
 * **Validación y Esquemas:** Pydantic V2
-* **Pruebas Automatizadas:** Pytest con TestClient
+* **Pruebas Automatizadas:** Pytest con TestClient (22 pruebas unitarias y de integración E2E)
+
+---
 
 ## 🚀 Instalación y Puesta en Marcha (Desde Cero)
 
-### 1. Clonar y Configurar Entorno
+### Método 1: Inicio Rápido en 1 Clic (Recomendado para Windows)
+El proyecto incluye el ejecutable [`iniciar_sistema.bat`](iniciar_sistema.bat) en la raíz:
+1. Haz **doble clic** sobre `iniciar_sistema.bat`.
+2. El script detectará automáticamente el entorno virtual (lo creará e instalará dependencias si no existen), poblará la base de datos inicial con los datos de prueba (`seed.py`), levantará el servidor Uvicorn y abrirá directamente tu navegador en:
+   - **Dashboard Visual:** [http://127.0.0.1:8000](http://127.0.0.1:8000)
+   - **Documentación Swagger:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+### Método 2: Instalación Manual por Terminal (Multiplataforma)
+
+#### 1. Clonar y Configurar Entorno
 ```bash
 git clone https://github.com/WithBaz/sistema-agenda-veterinaria.git
 cd sistema-agenda-veterinaria
@@ -49,26 +62,44 @@ source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Poblar Datos de Prueba (Seed Data)
-Precarga automáticamente los 3 profesionales requeridos, tipos de consulta y casos de prueba:
+#### 2. Poblar Datos de Prueba (Seed Data)
+Precarga automáticamente los 3 profesionales requeridos, catálogo de consultas, propietarios y pacientes demo:
 ```bash
 python -m app.seed
 ```
 
-### 3. Ejecutar el Servidor y Abrir la Interfaz Web
+#### 3. Ejecutar el Servidor Web
 ```bash
 uvicorn app.main:app --reload
 ```
 Abre en tu navegador:  
-👉 **Interfaz Web y Dashboard:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)  
-👉 **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)  
-👉 **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+* 👉 **Interfaz Gráfica / Dashboard:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)  
+* 👉 **Swagger UI (OpenAPI):** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)  
+* 👉 **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-### 4. Ejecutar la Suite de Pruebas Automatizadas
-Ejecuta las **21 pruebas unitarias y de integración E2E**:
+---
+
+## 🧪 Pruebas Automatizadas
+El sistema cuenta con una suite completa de **22 pruebas automatizadas** que validan la persistencia de modelos, restricciones de unicidad, el algoritmo de detección de solapamientos, el barrido lineal de espacios libres, la política de cancelación de 2 horas y el bloqueo de mascotas fallecidas:
 ```bash
 pytest -v
 ```
+
+---
+
+## 📡 Resumen de Endpoints de la API REST
+
+| Módulo | Método | Endpoint | Descripción |
+|---|---|---|---|
+| **Agenda** | `GET` | `/api/v1/agenda/profesional/{id}?fecha=YYYY-MM-DD` | Consulta obligatoria: citas del día e intervalos libres calculados (08:00 a 18:00) |
+| **Citas** | `POST` | `/api/v1/citas/` | Agendar nueva cita médica con validación de no solapamiento y estado vital |
+| **Citas** | `PATCH` | `/api/v1/citas/{id}/cancelar` | Cancelar cita (aplica regla de antelación $\ge 2$ horas o marca inasistencia) |
+| **Atenciones** | `POST` | `/api/v1/atenciones/` | Registrar atención clínica y diagnósticos tras culminar cita |
+| **Atenciones** | `GET` | `/api/v1/atenciones/mascota/{id}/historial` | Historial médico completo y prescripciones (accesible incluso si la mascota falleció) |
+| **Catálogos** | `POST` / `GET` | `/api/v1/catalogos/propietarios` | Crear y listar propietarios / tutores |
+| **Catálogos** | `POST` / `GET` | `/api/v1/catalogos/mascotas` | Crear y listar mascotas pacientes |
+| **Catálogos** | `POST` / `GET` | `/api/v1/catalogos/profesionales` | Crear y listar médicos veterinarios |
+| **Catálogos** | `POST` / `GET` | `/api/v1/catalogos/tipos-consulta` | Crear y listar tipos de consulta y duraciones |
 
 ---
 

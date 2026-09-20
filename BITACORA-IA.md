@@ -126,3 +126,34 @@ Documento de auditoría del proceso de colaboración con herramientas de IA, reg
 * **21 pruebas automatizadas aprobadas (100% de éxito en 1.05 segundos).**
 * Base de datos poblada y lista para ejecutar con un solo comando.
 * Entregable completo y listo para defensa oral.
+
+---
+
+## Sesión 5: Usabilidad, Frontend Interactivo, Despliegue en 1 Clic y Entidades Base
+* **Fecha:** 2026-09-20 (Jornada Nocturna)
+* **Herramienta utilizada:** Antigravity (Google DeepMind).
+* **Objetivo de la sesión:** Incorporar una interfaz de usuario visual SPA completa, automatizar el arranque en 1 clic para Windows (`iniciar_sistema.bat`), completar endpoints de registro para Propietarios, Mascotas y Profesionales, y extraer la guía oral a formato Word en el escritorio del usuario.
+
+### 1. ¿Qué se le pidió al agente?
+1. Proveer una interfaz visual funcional para que el sistema no dependa únicamente de Swagger.
+2. Extraer la guía de defensa oral fuera del repositorio público de GitHub y entregarla como documento Word en el escritorio.
+3. Facilitar la ejecución desde cero en la máquina del usuario y en cualquier PC que clone el repositorio.
+4. Responder y resolver si era necesario crear mascotas, propietarios o profesionales en la aplicación.
+
+### 2. ¿Qué propuso el agente?
+* **Dashboard Visual Integrado (`app/static/index.html`):** Interfaz SPA con Tailwind CSS que renderiza la línea de tiempo del veterinario, métricas de ocupación, espacios libres con agendamiento directo, cancelación con regla de 2 horas y visor del historial médico.
+* **Script de Despliegue Automático (`iniciar_sistema.bat`):** Script que detecta la existencia de `.venv` (creándolo e instalando dependencias si no existe), ejecuta la siembra de base de datos (`seed.py`), levanta el servidor Uvicorn y abre el navegador por defecto.
+* **Extensión de Endpoints y UI de Catálogos:** Adición de rutas POST para `Profesional` y `TipoConsulta`, junto con un modal en la interfaz web para registrar nuevos Propietarios y Mascotas con validación de estado vital.
+* **Guía Oral en Word:** Generación vía `python-docx` del archivo `Guia_Defensa_Oral_Veterinaria.docx` ubicado en el escritorio local y desvinculado del repositorio Git.
+
+### 3. ¿Qué se aceptó y qué se rechazó?
+* ✅ **Aceptado:**
+  * Eliminación de `docs/GUIA-DEFENSA-ORAL.md` del repositorio para proteger la privacidad académica.
+  * Inclusión del script `iniciar_sistema.bat` documentado en el `README.md`.
+  * Formulario modal en la interfaz web para registrar clientes y mascotas de forma ágil.
+  * Incorporación de la prueba unitaria 22 cubriendo el alta de entidades base.
+
+### 4. Estado Final de Verificación:
+* **22 pruebas automatizadas aprobadas (100% de éxito).**
+* Interfaz gráfica y API REST sincronizadas y completamente operativas.
+* Repositorio Git limpio, profesional y sincronizado con GitHub.

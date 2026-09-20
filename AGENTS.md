@@ -48,4 +48,9 @@ El sistema opera sobre 7 entidades relacionadas:
   - Exposición de endpoints REST modulares bajo `/api/v1` en FastAPI con documentación Swagger interactiva.
   - Siembra de datos automática (`seed.py`) con los 3 profesionales, tipos de consulta y casos de prueba.
   - Suite de integración E2E completando 21 pruebas automatizadas con 100% de éxito.
-  - Formalización de la `GUIA-DEFENSA-ORAL.md` para la sustentación individual de 6 minutos.
+* **2026-09-20 (Iteración 5 - Usabilidad, Interfaz Web y Despliegue en 1 Clic):**
+  - Extracción de la guía oral hacia formato Word (.docx) en el Escritorio local fuera del repositorio público.
+  - Creación del Dashboard Visual SPA (`app/static/index.html`) para control de agenda diaria y consulta de historiales.
+  - Incorporación del script ejecutable `iniciar_sistema.bat` con detección y creación automática de entorno virtual.
+  - Habilitación de endpoints y formularios de registro para entidades base (`Propietario`, `Mascota`, `Profesional`).
+  - Suite completa de 22 pruebas automatizadas pasando al 100%.

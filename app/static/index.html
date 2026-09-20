@@ -134,9 +134,14 @@
 
     <section id="vista-pacientes" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div class="border-b border-slate-100 pb-4 mb-5">
-          <h3 class="text-lg font-bold text-slate-900">Pacientes Registrados</h3>
-          <p class="text-xs text-slate-500">Historial médico permanente incluso si la mascota está fallecida (Regla 4).</p>
+        <div class="border-b border-slate-100 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Pacientes Registrados</h3>
+            <p class="text-xs text-slate-500">Historial médico permanente incluso si la mascota está fallecida (Regla 4).</p>
+          </div>
+          <button onclick="abrirModalNuevoPaciente()" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition self-start sm:self-auto">
+            <i class="fa-solid fa-user-plus mr-1.5"></i> Registrar Paciente / Propietario
+          </button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
@@ -251,6 +256,79 @@
       <div class="border-t border-slate-100 pt-3 flex justify-end">
         <button onclick="cerrarModalHistorial()" class="px-5 py-2 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl">Cerrar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR PACIENTE Y PROPIETARIO -->
+  <div id="modal-nuevo-paciente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center">
+          <i class="fa-solid fa-user-plus text-teal-600 mr-2"></i> Registrar Propietario y Mascota
+        </h3>
+        <button onclick="cerrarModalNuevoPaciente()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-nuevo-paciente" onsubmit="enviarRegistrarPaciente(event)" class="space-y-4">
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-user mr-1.5"></i> Datos del Propietario
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Cédula / Documento</label>
+              <input type="text" id="reg-prop-doc" required placeholder="Ej: 1098765432" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
+              <input type="text" id="reg-prop-tel" required placeholder="Ej: 3124567890" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre Completo</label>
+            <input type="text" id="reg-prop-nombre" required placeholder="Ej: Laura Sofía Martínez" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-paw mr-1.5"></i> Datos de la Mascota
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre Mascota</label>
+              <input type="text" id="reg-masc-nombre" required placeholder="Ej: Toby" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Especie</label>
+              <select id="reg-masc-especie" required class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+                <option value="Ave">Ave</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Raza (Opcional)</label>
+              <input type="text" id="reg-masc-raza" placeholder="Ej: Poodle" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Estado Vital</label>
+              <select id="reg-masc-vital" required class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
+                <option value="viva">Viva (Apta para citas)</option>
+                <option value="fallecida">Fallecida (Solo lectura)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2 border-t border-slate-100">
+          <button type="button" onclick="cerrarModalNuevoPaciente()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-sm">Guardar Registro</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -387,6 +465,78 @@
         aviso.classList.remove("hidden");
       } else {
         aviso.classList.add("hidden");
+      }
+    }
+
+    function abrirModalNuevoPaciente() {
+      document.getElementById("form-nuevo-paciente").reset();
+      document.getElementById("modal-nuevo-paciente").classList.remove("hidden");
+    }
+
+    function cerrarModalNuevoPaciente() {
+      document.getElementById("modal-nuevo-paciente").classList.add("hidden");
+    }
+
+    async function enviarRegistrarPaciente(e) {
+      e.preventDefault();
+      const doc = document.getElementById("reg-prop-doc").value.trim();
+      const nombreProp = document.getElementById("reg-prop-nombre").value.trim();
+      const tel = document.getElementById("reg-prop-tel").value.trim();
+      const nombreMasc = document.getElementById("reg-masc-nombre").value.trim();
+      const especie = document.getElementById("reg-masc-especie").value;
+      const raza = document.getElementById("reg-masc-raza").value.trim();
+      const vital = document.getElementById("reg-masc-vital").value;
+
+      try {
+        // 1. Obtener o crear propietario
+        let propId = null;
+        const resPropietarios = await fetch("/api/v1/catalogos/propietarios");
+        const propietarios = await resPropietarios.json();
+        const existente = propietarios.find(p => p.documento_identidad === doc);
+
+        if (existente) {
+          propId = existente.id;
+        } else {
+          const resCrearProp = await fetch("/api/v1/catalogos/propietarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              documento_identidad: doc,
+              nombre_completo: nombreProp,
+              telefono: tel
+            })
+          });
+          if (!resCrearProp.ok) {
+            const err = await resCrearProp.json();
+            throw new Error(err.detail || "Error al registrar propietario");
+          }
+          const nuevoProp = await resCrearProp.json();
+          propId = nuevoProp.id;
+        }
+
+        // 2. Crear mascota asociada
+        const resCrearMasc = await fetch("/api/v1/catalogos/mascotas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            propietario_id: propId,
+            nombre: nombreMasc,
+            especie: especie,
+            raza: raza || null,
+            estado_vital: vital
+          })
+        });
+
+        if (!resCrearMasc.ok) {
+          const err = await resCrearMasc.json();
+          throw new Error(err.detail || "Error al registrar mascota");
+        }
+
+        cerrarModalNuevoPaciente();
+        mostrarAlerta("exito", "Registro Exitoso", `Se registró a la mascota "${nombreMasc}" asociada a ${nombreProp}.`);
+        await cargarMascotas();
+      } catch (err) {
+        mostrarAlerta("error", "Error en Registro", err.message);
       }
     }
 

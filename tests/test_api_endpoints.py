@@ -251,3 +251,43 @@ def test_registro_atencion_y_consulta_historial_completo(client):
     res_historial_muerta = client.get("/api/v1/atenciones/mascota/2/historial")
     assert res_historial_muerta.status_code == 200
     assert res_historial_muerta.json()["estado_vital"] == "fallecida"
+
+
+def test_creacion_entidades_base(client: TestClient):
+    """Verifica la creación mediante API de Propietario, Mascota y Profesional."""
+    # 1. Crear nuevo propietario
+    res_prop = client.post("/api/v1/catalogos/propietarios", json={
+        "documento_identidad": "999888777",
+        "nombre_completo": "Carlos Mendoza",
+        "telefono": "3151234567",
+        "email": "carlos@example.com"
+    })
+    assert res_prop.status_code == 201
+    prop_data = res_prop.json()
+    assert prop_data["id"] is not None
+    assert prop_data["nombre_completo"] == "Carlos Mendoza"
+
+    # 2. Crear nueva mascota asociada al propietario
+    res_masc = client.post("/api/v1/catalogos/mascotas", json={
+        "propietario_id": prop_data["id"],
+        "nombre": "Rocky",
+        "especie": "Canino",
+        "raza": "Golden Retriever",
+        "estado_vital": "viva"
+    })
+    assert res_masc.status_code == 201
+    masc_data = res_masc.json()
+    assert masc_data["nombre"] == "Rocky"
+    assert masc_data["propietario_id"] == prop_data["id"]
+
+    # 3. Crear nuevo profesional
+    res_prof = client.post("/api/v1/catalogos/profesionales", json={
+        "documento_identidad": "VET400",
+        "nombre_completo": "Dra. Laura Jimenez",
+        "especialidad": "Oftalmología",
+        "telefono": "3209876543"
+    })
+    assert res_prof.status_code == 201
+    prof_data = res_prof.json()
+    assert prof_data["nombre_completo"] == "Dra. Laura Jimenez"
+    assert prof_data["especialidad"] == "Oftalmología"
