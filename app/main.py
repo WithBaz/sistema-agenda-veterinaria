@@ -60,24 +60,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.middleware("http")
-async def normalizar_rutas_vercel(request: Request, call_next):
-    """Normaliza rutas y prefijos de proxy o rewrite generados por entornos serverless como Vercel."""
-    # 1. Si Vercel envió la ruta coincidente original en el header x-matched-path
-    matched_path = request.headers.get("x-matched-path")
-    if matched_path and matched_path not in ("/api/index.py", "/api/index") and not matched_path.endswith("404"):
-        request.scope["path"] = matched_path
-    else:
-        path = request.scope.get("path", "")
-        for prefix in ("/api/index.py", "/api/index"):
-            if path == prefix:
-                request.scope["path"] = "/"
-                break
-            elif path.startswith(prefix + "/"):
-                request.scope["path"] = path[len(prefix):]
-                break
-    return await call_next(request)
-
 # Montaje de archivos estáticos (Frontend)
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
@@ -131,24 +113,12 @@ app.include_router(atenciones_router, prefix="/api/v1")
 app.include_router(catalogos_router, prefix="/api/v1")
 
 @app.get("/", include_in_schema=False)
-@app.get("/api/index.py", include_in_schema=False)
-@app.get("/api", include_in_schema=False)
 def root():
     """Sirve la interfaz web interactiva en la raíz del sistema."""
     index_file = os.path.join(static_dir, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "VetSchedule API activa. Visita /docs para Swagger UI."}
-
-@app.get("/api/debug-vercel", include_in_schema=False)
-def debug_vercel(request: Request):
-    """Endpoint de diagnóstico para inspeccionar headers y paths de Vercel."""
-    return {
-        "headers": dict(request.headers),
-        "url_path": request.url.path,
-        "scope_path": request.scope.get("path"),
-        "matched_path": request.headers.get("x-matched-path"),
-    }
 
 @app.get("/health", tags=["Estado del Sistema"])
 def health_check():
