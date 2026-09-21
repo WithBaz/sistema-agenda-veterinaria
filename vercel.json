@@ -15,10 +15,6 @@
     {
       "source": "/health",
       "destination": "/api/index.py"
-    },
-    {
-      "source": "/((?!api/|docs|openapi.json|health).*)",
-      "destination": "/index.html"
     }
   ]
 }
