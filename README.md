@@ -79,6 +79,16 @@ Abre en tu navegador:
 
 ---
 
+### Método 3: Despliegue en la Nube con Vercel (1 Clic desde GitHub)
+El proyecto está preconfigurado para Vercel Serverless Functions ([`vercel.json`](vercel.json) y [`api/index.py`](api/index.py)):
+1. Entra a [Vercel](https://vercel.com) e inicia sesión con tu usuario de GitHub.
+2. Haz clic en **Add New...** > **Project**.
+3. Selecciona tu repositorio: `WithBaz/sistema-agenda-veterinaria` y haz clic en **Import**.
+4. Mantén la configuración por defecto (*Framework Preset: Other*, *Root Directory: ./*).
+5. Haz clic en **Deploy**. En menos de 1 minuto tendrás una URL pública activa (ej. `https://sistema-agenda-veterinaria.vercel.app`) con la interfaz gráfica, el modo oscuro y Swagger operativos.
+
+---
+
 ## 🧪 Pruebas Automatizadas
 El sistema cuenta con una suite completa de **22 pruebas automatizadas** que validan la persistencia de modelos, restricciones de unicidad, el algoritmo de detección de solapamientos, el barrido lineal de espacios libres, la política de cancelación de 2 horas y el bloqueo de mascotas fallecidas:
 ```bash

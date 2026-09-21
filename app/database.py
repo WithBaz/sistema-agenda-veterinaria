@@ -1,15 +1,27 @@
-﻿"""Configuración de base de datos con SQLAlchemy 2.0 y SQLite.
+"""Configuración de base de datos con SQLAlchemy 2.0 y SQLite.
 
 Garantiza la activación estricta de claves foráneas en SQLite mediante eventos de conexión.
 """
 
+import os
+import shutil
 from typing import Generator
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
-# URL de conexión SQLite local
-DATABASE_URL = "sqlite:///./veterinaria.db"
+# Configuración dinámica de base de datos para entorno local o Serverless (Vercel)
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    TMP_DB = "/tmp/veterinaria.db"
+    LOCAL_DB = os.path.join(os.path.dirname(os.path.dirname(__file__)), "veterinaria.db")
+    if not os.path.exists(TMP_DB) and os.path.exists(LOCAL_DB):
+        try:
+            shutil.copyfile(LOCAL_DB, TMP_DB)
+        except Exception:
+            pass
+    DATABASE_URL = f"sqlite:///{TMP_DB}"
+else:
+    DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./veterinaria.db")
 
 # Creación del motor de persistencia
 engine = create_engine(

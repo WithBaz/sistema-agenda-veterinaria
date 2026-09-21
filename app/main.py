@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 from app.routers import agenda_router, citas_router, atenciones_router, catalogos_router
 from app.services.exceptions import (
     ReglaNegocioError,
@@ -25,6 +25,16 @@ async def lifespan(app: FastAPI):
     """Inicialización de la persistencia al levantar la aplicación."""
     # Asegura que las 7 tablas existan en SQLite
     Base.metadata.create_all(bind=engine)
+    # En entornos Serverless como Vercel, si la base de datos está vacía, se auto-siembra
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        try:
+            from app.models import Profesional
+            from app.seed import poblar_datos
+            with SessionLocal() as session:
+                if session.query(Profesional).count() == 0:
+                    poblar_datos()
+        except Exception as e:
+            print(f"[WARN] Error durante inicialización en Vercel: {e}")
     yield
 
 app = FastAPI(
