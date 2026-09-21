@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VetSchedule — Sistema de Gestión y Agenda Veterinaria</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Inicializar tema antes de renderizar para evitar parpadeo
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .slot-free { background: repeating-linear-gradient(45deg, #f0fdf4, #f0fdf4 10px, #dcfce7 10px, #dcfce7 20px); }
+    .dark .slot-free { background: repeating-linear-gradient(45deg, rgba(6, 78, 59, 0.25), rgba(6, 78, 59, 0.25) 10px, rgba(6, 95, 70, 0.35) 10px, rgba(6, 95, 70, 0.35) 20px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-200">
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white text-xl shadow-md shadow-teal-500/20">
+            <i class="fa-solid fa-paw"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">VetSchedule</h1>
+            <p class="text-xs font-medium text-teal-700 dark:text-teal-400">Clínica Veterinaria San Francisco • 3 Profesionales</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Jornada: 08:00 - 18:00
+          </span>
+          <button id="theme-toggle" onclick="toggleTema()" type="button" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-amber-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition" title="Alternar modo claro / oscuro">
+            <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+          </button>
+          <button onclick="abrirModalAgendar()" class="inline-flex items-center px-3.5 py-2 rounded-lg text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition">
+            <i class="fa-solid fa-plus mr-1.5"></i> Agendar Cita
+          </button>
+          <a href="/docs" target="_blank" class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition">
+            <i class="fa-solid fa-code mr-1.5 text-slate-400 dark:text-slate-500"></i> API Docs
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-8">
+        <button id="tab-agenda-btn" onclick="cambiarPestana('agenda')" class="border-b-2 border-teal-600 py-3.5 px-1 text-sm font-bold text-teal-600 dark:text-teal-400 flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-day"></i>
+          <span>Agenda Diaria y Espacios Libres</span>
+        </button>
+        <button id="tab-pacientes-btn" onclick="cambiarPestana('pacientes')" class="border-b-2 border-transparent py-3.5 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 flex items-center space-x-2">
+          <i class="fa-solid fa-dog"></i>
+          <span>Pacientes e Historial Clínico</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    <div id="alert-box" class="hidden mb-6 p-4 rounded-xl border flex items-start space-x-3 transition">
+      <div id="alert-icon" class="text-lg mt-0.5"></div>
+      <div class="flex-1">
+        <h4 id="alert-title" class="text-sm font-bold"></h4>
+        <p id="alert-msg" class="text-sm mt-0.5 text-slate-600"></p>
+      </div>
+      <button onclick="cerrarAlerta()" class="text-slate-400 hover:text-slate-600 text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <section id="vista-agenda" class="space-y-6">
+      <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Médico Veterinario</label>
+            <div class="relative">
+              <select id="filtro-profesional" onchange="cargarAgenda()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-teal-500 focus:outline-none transition"></select>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Fecha de la Agenda</label>
+            <div class="relative">
+              <input type="date" id="filtro-fecha" onchange="cargarAgenda()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-teal-500 focus:outline-none transition">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-calendar"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="self-end md:self-auto">
+          <button onclick="cargarAgenda()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm rounded-xl transition flex items-center space-x-2 border border-transparent dark:border-slate-700">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+          <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Jornada Continua</p>
+          <p class="text-xl font-extrabold text-slate-900 dark:text-white mt-1">600 min <span class="text-xs font-normal text-slate-500 dark:text-slate-400">(10h)</span></p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+          <p class="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase">Tiempo Ocupado</p>
+          <p id="metrica-ocupados" class="text-xl font-extrabold text-teal-700 dark:text-teal-300 mt-1">0 min</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+          <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Tiempo Libre Disponible</p>
+          <p id="metrica-libres" class="text-xl font-extrabold text-emerald-700 dark:text-emerald-300 mt-1">600 min</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+          <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Tasa de Ocupación</p>
+          <div class="flex items-center space-x-2 mt-1">
+            <p id="metrica-porcentaje" class="text-xl font-extrabold text-slate-900 dark:text-white">0%</p>
+            <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div id="barra-ocupacion" class="bg-teal-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 transition-colors">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center">
+            <i class="fa-solid fa-timeline text-teal-600 dark:text-teal-400 mr-2"></i>
+            Bloques Horarios y Disponibilidad Calculada (08:00 a 18:00)
+          </h3>
+          <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">Algoritmo de barrido lineal continuo</span>
+        </div>
+        <div id="timeline-container" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <section id="vista-pacientes" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div class="border-b border-slate-100 dark:border-slate-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Pacientes Registrados</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Historial médico permanente incluso si la mascota está fallecida (Regla 4).</p>
+          </div>
+          <button onclick="abrirModalNuevoPaciente()" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition self-start sm:self-auto">
+            <i class="fa-solid fa-user-plus mr-1.5"></i> Registrar Paciente / Propietario
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 uppercase text-xs border-b border-slate-200 dark:border-slate-800 font-bold">
+              <tr>
+                <th class="py-3 px-4">Paciente</th>
+                <th class="py-3 px-4">Especie / Raza</th>
+                <th class="py-3 px-4">Estado Vital (Regla 4)</th>
+                <th class="py-3 px-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-mascotas-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: AGENDAR CITA -->
+  <div id="modal-agendar" class="hidden fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4 transition-colors">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center">
+          <i class="fa-solid fa-calendar-plus text-teal-600 dark:text-teal-400 mr-2"></i> Nueva Cita Médica
+        </h3>
+        <button onclick="cerrarModalAgendar()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-agendar" onsubmit="enviarAgendarCita(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Profesional Asignado</label>
+          <select id="modal-cita-profesional" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Mascota Paciente</label>
+          <select id="modal-cita-mascota" onchange="verificarMascotaSeleccionada()" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100"></select>
+          <p id="aviso-mascota-fallecida" class="hidden text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mascota fallecida. El sistema bloqueará el agendamiento (Regla 4).
+          </p>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Tipo de Consulta</label>
+          <select id="modal-cita-tipo" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Fecha</label>
+            <input type="date" id="modal-cita-fecha" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Hora Inicio (08:00 - 18:00)</label>
+            <input type="time" id="modal-cita-hora" min="08:00" max="17:40" required class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Motivo de Consulta</label>
+          <textarea id="modal-cita-motivo" rows="2" placeholder="Motivo de la visita" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100"></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="cerrarModalAgendar()" class="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-sm">Confirmar Cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CANCELAR CITA -->
+  <div id="modal-cancelar" class="hidden fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4 transition-colors">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center text-rose-600 dark:text-rose-400">
+          <i class="fa-solid fa-ban mr-2"></i> Cancelar Cita Médica
+        </h3>
+        <button onclick="cerrarModalCancelar()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="text-sm text-slate-600 dark:text-slate-300 space-y-2">
+        <p><strong>Cita ID:</strong> <span id="cancelar-cita-id" class="font-mono text-teal-600 dark:text-teal-400"></span></p>
+        <p><strong>Paciente:</strong> <span id="cancelar-cita-paciente" class="text-slate-800 dark:text-slate-100 font-medium"></span></p>
+        <p><strong>Horario:</strong> <span id="cancelar-cita-horario" class="font-bold text-slate-800 dark:text-white"></span></p>
+        <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300">
+          <strong>Regla 3:</strong> Cancelar con &ge; 2 horas pasa a <b>cancelada</b>. Con &lt; 2 horas pasa a <b class="text-rose-700 dark:text-rose-400">inasistencia</b>.
+        </div>
+      </div>
+      <form id="form-cancelar" onsubmit="enviarCancelarCita(event)" class="space-y-3 pt-2">
+        <input type="hidden" id="cancelar-input-id">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Simular Momento de Solicitud (Opcional)</label>
+          <input type="datetime-local" id="cancelar-input-fecha-solicitud" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-100">
+          <span class="text-[11px] text-slate-400 dark:text-slate-500">Vacío = Hora actual real.</span>
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="cerrarModalCancelar()" class="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">Volver</button>
+          <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm">Procesar Cancelación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTORIAL CLÍNICO -->
+  <div id="modal-historial" class="hidden fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col transition-colors">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center">
+            <i class="fa-solid fa-notes-medical text-teal-600 dark:text-teal-400 mr-2"></i> Historial: <span id="historial-paciente-nombre" class="ml-1 text-teal-700 dark:text-teal-300"></span>
+          </h3>
+          <p id="historial-paciente-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"></p>
+        </div>
+        <button onclick="cerrarModalHistorial()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="historial-contenido" class="flex-1 overflow-y-auto space-y-4 pr-1"></div>
+      <div class="border-t border-slate-100 dark:border-slate-800 pt-3 flex justify-end">
+        <button onclick="cerrarModalHistorial()" class="px-5 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR PACIENTE Y PROPIETARIO -->
+  <div id="modal-nuevo-paciente" class="hidden fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4 transition-colors">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center">
+          <i class="fa-solid fa-user-plus text-teal-600 dark:text-teal-400 mr-2"></i> Registrar Propietario y Mascota
+        </h3>
+        <button onclick="cerrarModalNuevoPaciente()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-nuevo-paciente" onsubmit="enviarRegistrarPaciente(event)" class="space-y-4">
+        <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+          <h4 class="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-user mr-1.5"></i> Datos del Propietario
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Cédula / Documento</label>
+              <input type="text" id="reg-prop-doc" required placeholder="Ej: 1098765432" class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Teléfono</label>
+              <input type="text" id="reg-prop-tel" required placeholder="Ej: 3124567890" class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Nombre Completo</label>
+            <input type="text" id="reg-prop-nombre" required placeholder="Ej: Laura Sofía Martínez" class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+          <h4 class="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-paw mr-1.5"></i> Datos de la Mascota
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Nombre Mascota</label>
+              <input type="text" id="reg-masc-nombre" required placeholder="Ej: Toby" class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Especie</label>
+              <select id="reg-masc-especie" required class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+                <option value="Ave">Ave</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Raza (Opcional)</label>
+              <input type="text" id="reg-masc-raza" placeholder="Ej: Poodle" class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Estado Vital</label>
+              <select id="reg-masc-vital" required class="w-full p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100">
+                <option value="viva">Viva (Apta para citas)</option>
+                <option value="fallecida">Fallecida (Solo lectura)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="cerrarModalNuevoPaciente()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-sm">Guardar Registro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let profesionalesGlobal = [];
+    let tiposConsultaGlobal = [];
+    let mascotasGlobal = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const hoy = new Date().toISOString().split("T")[0];
+      document.getElementById("filtro-fecha").value = hoy;
+      document.getElementById("modal-cita-fecha").value = hoy;
+      actualizarIconoTema(document.documentElement.classList.contains("dark"));
+      await cargarCatalogos();
+      await cargarAgenda();
+      await cargarMascotas();
+    });
+
+    function toggleTema() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+      actualizarIconoTema(isDark);
+    }
+
+    function actualizarIconoTema(isDark) {
+      const icon = document.getElementById("theme-icon");
+      if (icon) {
+        if (isDark) {
+          icon.className = "fa-solid fa-sun text-sm text-amber-400";
+        } else {
+          icon.className = "fa-solid fa-moon text-sm text-slate-600";
+        }
+      }
+    }
+
+    function cambiarPestana(tab) {
+      const vAgenda = document.getElementById("vista-agenda");
+      const vPacientes = document.getElementById("vista-pacientes");
+      const btnAgenda = document.getElementById("tab-agenda-btn");
+      const btnPacientes = document.getElementById("tab-pacientes-btn");
+
+      if (tab === "agenda") {
+        vAgenda.classList.remove("hidden");
+        vPacientes.classList.add("hidden");
+        btnAgenda.className = "border-b-2 border-teal-600 py-3.5 px-1 text-sm font-bold text-teal-600 dark:text-teal-400 flex items-center space-x-2";
+        btnPacientes.className = "border-b-2 border-transparent py-3.5 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 flex items-center space-x-2";
+      } else {
+        vAgenda.classList.add("hidden");
+        vPacientes.classList.remove("hidden");
+        btnPacientes.className = "border-b-2 border-teal-600 py-3.5 px-1 text-sm font-bold text-teal-600 dark:text-teal-400 flex items-center space-x-2";
+        btnAgenda.className = "border-b-2 border-transparent py-3.5 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 flex items-center space-x-2";
+      }
+    }
+
+    function mostrarAlerta(tipo, titulo, mensaje) {
+      const box = document.getElementById("alert-box");
+      const icon = document.getElementById("alert-icon");
+      const title = document.getElementById("alert-title");
+      const msg = document.getElementById("alert-msg");
+
+      box.classList.remove("hidden");
+      title.innerText = titulo;
+      msg.innerText = mensaje;
+
+      if (tipo === "error") {
+        box.className = "mb-6 p-4 rounded-xl border flex items-start space-x-3 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200";
+        icon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-600 dark:text-rose-400"></i>';
+      } else if (tipo === "warning") {
+        box.className = "mb-6 p-4 rounded-xl border flex items-start space-x-3 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200";
+        icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400"></i>';
+      } else {
+        box.className = "mb-6 p-4 rounded-xl border flex items-start space-x-3 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200";
+        icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400"></i>';
+      }
+      box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cerrarAlerta() {
+      document.getElementById("alert-box").classList.add("hidden");
+    }
+
+    async function cargarCatalogos() {
+      try {
+        const [resProf, resTipos] = await Promise.all([
+          fetch("/api/v1/catalogos/profesionales"),
+          fetch("/api/v1/catalogos/tipos-consulta")
+        ]);
+        profesionalesGlobal = await resProf.json();
+        tiposConsultaGlobal = await resTipos.json();
+
+        const selProf = document.getElementById("filtro-profesional");
+        const modalProf = document.getElementById("modal-cita-profesional");
+        selProf.innerHTML = "";
+        modalProf.innerHTML = "";
+
+        profesionalesGlobal.forEach(p => {
+          selProf.innerHTML += `<option value="${p.id}">${p.nombre_completo} (${p.especialidad})</option>`;
+          modalProf.innerHTML += `<option value="${p.id}">${p.nombre_completo} — ${p.especialidad}</option>`;
+        });
+
+        const modalTipos = document.getElementById("modal-cita-tipo");
+        modalTipos.innerHTML = "";
+        tiposConsultaGlobal.forEach(t => {
+          modalTipos.innerHTML += `<option value="${t.id}">${t.nombre} — [${t.duracion_minutos} min]</option>`;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function cargarMascotas() {
+      try {
+        const res = await fetch("/api/v1/catalogos/mascotas");
+        mascotasGlobal = await res.json();
+        const tbody = document.getElementById("tabla-mascotas-body");
+        tbody.innerHTML = "";
+        const modalMascotas = document.getElementById("modal-cita-mascota");
+        modalMascotas.innerHTML = "";
+
+        mascotasGlobal.forEach(m => {
+          const badgeVital = m.estado_vital === "viva" 
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-heart mr-1"></i> Viva</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800"><i class="fa-solid fa-skull mr-1"></i> Fallecida</span>';
+
+          tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+              <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100">${m.nombre}</td>
+              <td class="py-3 px-4 text-slate-600 dark:text-slate-400">${m.especie} ${m.raza ? `(${m.raza})` : ''}</td>
+              <td class="py-3 px-4">${badgeVital}</td>
+              <td class="py-3 px-4">
+                <button onclick="verHistorial(${m.id})" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 transition">
+                  <i class="fa-solid fa-file-medical mr-1.5"></i> Ver Historial
+                </button>
+              </td>
+            </tr>
+          `;
+
+          modalMascotas.innerHTML += `
+            <option value="${m.id}" data-vital="${m.estado_vital}">${m.nombre} (${m.especie}) - [Estado: ${m.estado_vital}]</option>
+          `;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function verificarMascotaSeleccionada() {
+      const select = document.getElementById("modal-cita-mascota");
+      const opt = select.options[select.selectedIndex];
+      const aviso = document.getElementById("aviso-mascota-fallecida");
+      if (opt && opt.getAttribute("data-vital") === "fallecida") {
+        aviso.classList.remove("hidden");
+      } else {
+        aviso.classList.add("hidden");
+      }
+    }
+
+    function abrirModalNuevoPaciente() {
+      document.getElementById("form-nuevo-paciente").reset();
+      document.getElementById("modal-nuevo-paciente").classList.remove("hidden");
+    }
+
+    function cerrarModalNuevoPaciente() {
+      document.getElementById("modal-nuevo-paciente").classList.add("hidden");
+    }
+
+    async function enviarRegistrarPaciente(e) {
+      e.preventDefault();
+      const doc = document.getElementById("reg-prop-doc").value.trim();
+      const nombreProp = document.getElementById("reg-prop-nombre").value.trim();
+      const tel = document.getElementById("reg-prop-tel").value.trim();
+      const nombreMasc = document.getElementById("reg-masc-nombre").value.trim();
+      const especie = document.getElementById("reg-masc-especie").value;
+      const raza = document.getElementById("reg-masc-raza").value.trim();
+      const vital = document.getElementById("reg-masc-vital").value;
+
+      try {
+        // 1. Obtener o crear propietario
+        let propId = null;
+        const resPropietarios = await fetch("/api/v1/catalogos/propietarios");
+        const propietarios = await resPropietarios.json();
+        const existente = propietarios.find(p => p.documento_identidad === doc);
+
+        if (existente) {
+          propId = existente.id;
+        } else {
+          const resCrearProp = await fetch("/api/v1/catalogos/propietarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              documento_identidad: doc,
+              nombre_completo: nombreProp,
+              telefono: tel
+            })
+          });
+          if (!resCrearProp.ok) {
+            const err = await resCrearProp.json();
+            throw new Error(err.detail || "Error al registrar propietario");
+          }
+          const nuevoProp = await resCrearProp.json();
+          propId = nuevoProp.id;
+        }
+
+        // 2. Crear mascota asociada
+        const resCrearMasc = await fetch("/api/v1/catalogos/mascotas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            propietario_id: propId,
+            nombre: nombreMasc,
+            especie: especie,
+            raza: raza || null,
+            estado_vital: vital
+          })
+        });
+
+        if (!resCrearMasc.ok) {
+          const err = await resCrearMasc.json();
+          throw new Error(err.detail || "Error al registrar mascota");
+        }
+
+        cerrarModalNuevoPaciente();
+        mostrarAlerta("exito", "Registro Exitoso", `Se registró a la mascota "${nombreMasc}" asociada a ${nombreProp}.`);
+        await cargarMascotas();
+      } catch (err) {
+        mostrarAlerta("error", "Error en Registro", err.message);
+      }
+    }
+
+    async function cargarAgenda() {
+      const profId = document.getElementById("filtro-profesional").value;
+      const fecha = document.getElementById("filtro-fecha").value;
+      if (!profId || !fecha) return;
+
+      const container = document.getElementById("timeline-container");
+      container.innerHTML = `<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl"></i></div>`;
+
+      try {
+        const res = await fetch(`/api/v1/agenda/profesional/${profId}?fecha=${fecha}`);
+        const data = await res.json();
+
+        document.getElementById("metrica-ocupados").innerText = `${data.minutos_ocupados} min`;
+        document.getElementById("metrica-libres").innerText = `${data.minutos_libres} min`;
+        document.getElementById("metrica-porcentaje").innerText = `${data.porcentaje_ocupacion}%`;
+        document.getElementById("barra-ocupacion").style.width = `${Math.min(100, data.porcentaje_ocupacion)}%`;
+
+        container.innerHTML = "";
+
+        if (data.citas_programadas.length === 0 && data.espacios_libres.length === 1) {
+          const espacio = data.espacios_libres[0];
+          container.innerHTML = `
+            <div class="slot-free p-6 rounded-xl border border-emerald-300 dark:border-emerald-800 text-center">
+              <i class="fa-solid fa-calendar-check text-emerald-600 dark:text-emerald-400 text-3xl mb-2"></i>
+              <h4 class="text-sm font-bold text-emerald-900 dark:text-emerald-200">Jornada Completamente Disponible</h4>
+              <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">Horario libre: <strong>${espacio.inicio} a ${espacio.fin}</strong> (${espacio.duracion_minutos} minutos disponibles)</p>
+              <button onclick="prepararAgendamientoDirecto('${espacio.inicio}')" class="mt-3 inline-flex items-center px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                <i class="fa-solid fa-plus mr-1.5"></i> Agendar Primer Turno
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        let eventos = [];
+        data.citas_programadas.forEach(c => {
+          const hInicio = new Date(c.fecha_hora_inicio).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+          const hFin = new Date(c.fecha_hora_fin).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+          eventos.push({ tipo: "cita", inicio: hInicio, fin: hFin, data: c });
+        });
+
+        data.espacios_libres.forEach(e => {
+          eventos.push({ tipo: "libre", inicio: e.inicio, fin: e.fin, data: e });
+        });
+
+        eventos.sort((a, b) => a.inicio.localeCompare(b.inicio));
+
+        eventos.forEach(ev => {
+          if (ev.tipo === "cita") {
+            const c = ev.data;
+            const badgeEstado = c.estado === "programada"
+              ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">Programada</span>'
+              : c.estado === "completada"
+              ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">Completada</span>'
+              : '<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800">' + c.estado + '</span>';
+
+            container.innerHTML += `
+              <div class="bg-slate-50 dark:bg-slate-800/70 border-l-4 border-teal-500 rounded-r-xl p-4 border-y border-r border-slate-200 dark:border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm hover:shadow transition">
+                <div class="flex items-start space-x-3">
+                  <div class="text-center font-mono bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <p class="text-xs font-bold text-slate-800 dark:text-slate-100">${ev.inicio}</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">${ev.fin}</p>
+                  </div>
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <h4 class="text-sm font-bold text-slate-900 dark:text-white">${c.mascota_nombre} <span class="text-xs font-normal text-slate-500 dark:text-slate-400">(${c.especie})</span></h4>
+                      ${badgeEstado}
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5"><strong>Servicio:</strong> ${c.tipo_consulta_nombre} (${c.duracion_minutos} min) • <strong>Dueño:</strong> ${c.propietario_nombre}</p>
+                    ${c.motivo ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic mt-1">"${c.motivo}"</p>` : ''}
+                  </div>
+                </div>
+                ${c.estado === 'programada' ? `
+                  <div class="flex items-center space-x-2 self-end md:self-auto">
+                    <button onclick="abrirModalCancelar(${c.id}, '${c.mascota_nombre}', '${ev.inicio} - ${ev.fin}')" class="px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-lg transition">
+                      <i class="fa-solid fa-xmark mr-1"></i> Cancelar
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          } else {
+            const e = ev.data;
+            container.innerHTML += `
+              <div class="slot-free border border-emerald-300 dark:border-emerald-800/80 rounded-xl p-3.5 flex items-center justify-between transition">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-clock"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Espacio Libre Disponible: <strong>${e.inicio} a ${e.fin}</strong></p>
+                    <p class="text-[11px] text-emerald-700 dark:text-emerald-400">${e.duracion_minutos} minutos disponibles para agendamiento</p>
+                  </div>
+                </div>
+                <button onclick="prepararAgendamientoDirecto('${e.inicio}')" class="px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200/80 dark:hover:bg-emerald-900/60 bg-white/80 dark:bg-slate-900/80 border border-emerald-300 dark:border-emerald-700 rounded-lg transition shadow-xs">
+                  <i class="fa-solid fa-calendar-plus mr-1"></i> Agendar aquí
+                </button>
+              </div>
+            `;
+          }
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function abrirModalAgendar() {
+      document.getElementById("modal-agendar").classList.remove("hidden");
+      verificarMascotaSeleccionada();
+    }
+    function cerrarModalAgendar() {
+      document.getElementById("modal-agendar").classList.add("hidden");
+    }
+
+    function prepararAgendamientoDirecto(horaInicio) {
+      document.getElementById("modal-cita-profesional").value = document.getElementById("filtro-profesional").value;
+      document.getElementById("modal-cita-fecha").value = document.getElementById("filtro-fecha").value;
+      document.getElementById("modal-cita-hora").value = horaInicio;
+      abrirModalAgendar();
+    }
+
+    async function enviarAgendarCita(e) {
+      e.preventDefault();
+      const profId = parseInt(document.getElementById("modal-cita-profesional").value);
+      const mascotaId = parseInt(document.getElementById("modal-cita-mascota").value);
+      const tipoId = parseInt(document.getElementById("modal-cita-tipo").value);
+      const fecha = document.getElementById("modal-cita-fecha").value;
+      const hora = document.getElementById("modal-cita-hora").value;
+      const motivo = document.getElementById("modal-cita-motivo").value;
+
+      const payload = {
+        profesional_id: profId,
+        mascota_id: mascotaId,
+        tipo_consulta_id: tipoId,
+        fecha_hora_inicio: `${fecha}T${hora}:00`,
+        motivo: motivo
+      };
+
+      try {
+        const res = await fetch("/api/v1/citas/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          cerrarModalAgendar();
+          mostrarAlerta("success", "Cita Agendada con Éxito", `Bloque: ${data.fecha_hora_inicio.split('T')[1].substring(0,5)} a ${data.fecha_hora_fin.split('T')[1].substring(0,5)}.`);
+          cargarAgenda();
+        } else {
+          mostrarAlerta("error", data.error || "Conflicto de Regla", data.detalle || "Error");
+          cerrarModalAgendar();
+        }
+      } catch (err) {
+        mostrarAlerta("error", "Error", err.message);
+      }
+    }
+
+    function abrirModalCancelar(id, paciente, horario) {
+      document.getElementById("cancelar-input-id").value = id;
+      document.getElementById("cancelar-cita-id").innerText = `#${id}`;
+      document.getElementById("cancelar-cita-paciente").innerText = paciente;
+      document.getElementById("cancelar-cita-horario").innerText = horario;
+      document.getElementById("cancelar-input-fecha-solicitud").value = "";
+      document.getElementById("modal-cancelar").classList.remove("hidden");
+    }
+    function cerrarModalCancelar() {
+      document.getElementById("modal-cancelar").classList.add("hidden");
+    }
+
+    async function enviarCancelarCita(e) {
+      e.preventDefault();
+      const citaId = document.getElementById("cancelar-input-id").value;
+      const fechaSolicitud = document.getElementById("cancelar-input-fecha-solicitud").value;
+      const payload = {};
+      if (fechaSolicitud) payload.fecha_hora_solicitud = fechaSolicitud;
+
+      try {
+        const res = await fetch(`/api/v1/citas/${citaId}/cancelar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        cerrarModalCancelar();
+        if (data.nuevo_estado === "cancelada") {
+          mostrarAlerta("success", "Cancelación Oportuna (>= 2 horas)", data.mensaje);
+        } else {
+          mostrarAlerta("warning", "Cancelación Tardía (< 2 horas) — Inasistencia", data.mensaje);
+        }
+        cargarAgenda();
+      } catch (err) {
+        mostrarAlerta("error", "Error", err.message);
+      }
+    }
+
+    async function verHistorial(mascotaId) {
+      try {
+        const res = await fetch(`/api/v1/atenciones/mascota/${mascotaId}/historial`);
+        const data = await res.json();
+        document.getElementById("historial-paciente-nombre").innerText = data.nombre;
+        document.getElementById("historial-paciente-sub").innerText = `Especie: ${data.especie} • Dueño: ${data.propietario_nombre} • Estado Vital: ${data.estado_vital.toUpperCase()}`;
+
+        const cont = document.getElementById("historial-contenido");
+        cont.innerHTML = "";
+
+        if (data.atenciones.length === 0) {
+          cont.innerHTML = `<p class="text-sm text-slate-400 dark:text-slate-500 py-6 text-center italic">No hay atenciones clínicas registradas para este paciente.</p>`;
+        } else {
+          data.atenciones.forEach(at => {
+            const fechaReg = new Date(at.fecha_registro).toLocaleString();
+            let prescHtml = "";
+            if (at.prescripciones.length > 0) {
+              prescHtml = `
+                <div class="mt-2.5 p-2.5 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg">
+                  <p class="text-xs font-bold text-amber-900 dark:text-amber-300 mb-1"><i class="fa-solid fa-pills mr-1"></i> Prescripciones Médicas:</p>
+                  <ul class="text-xs text-amber-800 dark:text-amber-300/90 list-disc list-inside space-y-0.5">
+                    ${at.prescripciones.map(p => `<li><strong>${p.medicamento}</strong>: ${p.dosis} por ${p.duracion_dias} días. <em>(${p.indicaciones || 'Sin notas'})</em></li>`).join('')}
+                  </ul>
+                </div>
+              `;
+            }
+
+            cont.innerHTML += `
+              <div class="bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-1.5 transition-colors">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-teal-800 dark:text-teal-400"><i class="fa-regular fa-calendar-check mr-1"></i> ${fechaReg}</span>
+                  <div class="flex space-x-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    ${at.peso_kg ? `<span>Peso: ${at.peso_kg} kg</span>` : ''}
+                    ${at.temperatura ? `<span>Temp: ${at.temperatura} °C</span>` : ''}
+                  </div>
+                </div>
+                <p class="text-xs text-slate-900 dark:text-white font-bold">Diagnóstico Clínico:</p>
+                <p class="text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-800">${at.diagnostico}</p>
+                ${at.notas_evolucion ? `<p class="text-xs text-slate-500 dark:text-slate-400 italic">Notas: ${at.notas_evolucion}</p>` : ''}
+                ${prescHtml}
+              </div>
+            `;
+          });
+        }
+        document.getElementById("modal-historial").classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function cerrarModalHistorial() {
+      document.getElementById("modal-historial").classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
