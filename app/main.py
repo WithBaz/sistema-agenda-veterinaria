@@ -140,6 +140,16 @@ def root():
         return FileResponse(index_file)
     return {"message": "VetSchedule API activa. Visita /docs para Swagger UI."}
 
+@app.get("/api/debug-vercel", include_in_schema=False)
+def debug_vercel(request: Request):
+    """Endpoint de diagnóstico para inspeccionar headers y paths de Vercel."""
+    return {
+        "headers": dict(request.headers),
+        "url_path": request.url.path,
+        "scope_path": request.scope.get("path"),
+        "matched_path": request.headers.get("x-matched-path"),
+    }
+
 @app.get("/health", tags=["Estado del Sistema"])
 def health_check():
     """Comprobación de salud de la API."""
